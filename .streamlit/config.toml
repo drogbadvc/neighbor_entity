@@ -1,0 +1,7 @@
+[theme]
+primaryColor="#037afb"
+backgroundColor="#FFFFFF"
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"

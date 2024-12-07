@@ -1,0 +1,4 @@
+streamlit
+st-table-words-icon
+requests
+pandas
