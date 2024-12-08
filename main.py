@@ -13,11 +13,29 @@ def load_languages(file_path='languages.json'):
             languages = json.load(f)
         return languages
     except FileNotFoundError:
-        st.error("Le fichier des langues n'a pas été trouvé.")
-        return []
+        st.warning("Le fichier des langues n'a pas été trouvé. Chargement des langues depuis le module Python.")
+        try:
+            from languages import languages
+            languages = languages()
+            return languages
+        except ImportError:
+            st.error("Le module 'languages.py' n'a pas pu être importé.")
+            return []
+        except Exception as e:
+            st.error(f"Une erreur s'est produite lors du chargement des langues depuis le module Python: {e}")
+            return []
     except json.JSONDecodeError:
-        st.error("Erreur de décodage du fichier JSON des langues.")
-        return []
+        st.warning("Erreur de décodage du fichier JSON des langues. Tentative de chargement depuis le module Python.")
+        try:
+            from languages import languages
+            languages = languages()
+            return languages
+        except ImportError:
+            st.error("Le module 'languages.py' n'a pas pu être importé.")
+            return []
+        except Exception as e:
+            st.error(f"Une erreur s'est produite lors du chargement des langues depuis le module Python: {e}")
+            return []
 
 LANGUAGES = load_languages()
 
