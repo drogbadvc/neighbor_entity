@@ -6,6 +6,20 @@ from st_table_words_icon import block_html
 
 st.set_page_config(page_title="Neighbor Entity", layout="wide")
 
+@st.cache_data
+def load_languages(file_path='languages.json'):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            languages = json.load(f)
+        return languages
+    except FileNotFoundError:
+        st.error("Le fichier des langues n'a pas été trouvé.")
+        return []
+    except json.JSONDecodeError:
+        st.error("Erreur de décodage du fichier JSON des langues.")
+        return []
+
+LANGUAGES = load_languages()
 
 def clean_keyword(kw):
     return kw.title().replace('_', ' ').replace('%20', ' ').strip()
@@ -75,7 +89,7 @@ def NeighGraph(lang, title, nPredLevels, nSuccLevels, reverseData=False):
 
 
 def pushData(data, titleChildren, titleParent):
-    if titleParent != clean_keyword(keyword):
+    if titleParent != clean_keyword(keyword_input):
         if len(data['children']) > 0:
             childrenItems = [index for index, item in enumerate(data['children']) if
                              'name' in item and item['name'] == titleParent]
@@ -94,7 +108,7 @@ def pushData(data, titleChildren, titleParent):
 
 def runData(nVertices, response, titles, reverseData=False):
     nEdges = 0
-    data = {"name": clean_keyword(keyword), "children": [], "size": 1}
+    data = {"name": clean_keyword(keyword_input), "children": [], "size": 1}
     for u in range(nVertices):
         for v in response["successors"][u]:
             if reverseData:
@@ -129,13 +143,27 @@ def extract_top_level_names(dct: dict) -> list:
 if 'input_text' not in st.session_state:
     st.session_state.input_text = ""
 
-keyword = st.text_input("Entrez un texte ici :",
-                        value=st.session_state.input_text if "input_text" in st.session_state else "")
+# Interface utilisateur
+col_lang, col_input = st.columns([1, 3])
 
-if keyword:
+with col_lang:
+    language = st.selectbox(
+        "Langue",
+        options=LANGUAGES,
+        format_func=lambda lang: lang["name"],
+        index=0
+    )
+
+with col_input:
+    keyword_input = st.text_input(
+        "Entrez un texte ici :",
+        value=st.session_state.input_text if "input_text" in st.session_state else ""
+    )
+
+if keyword_input:
     with st.spinner(''):
-        keyword_name = keyword.title().strip()
-        dataGraph = NeighGraph("fr", clean_keyword(keyword_name), 0, 1)
+        keyword_name = keyword_input.title().strip()
+        dataGraph = NeighGraph(language["code"], clean_keyword(keyword_name), 0, 1)
         if dataGraph:
             names_list = extract_names(dataGraph[0])
             parent_list = extract_top_level_names(dataGraph[0])
